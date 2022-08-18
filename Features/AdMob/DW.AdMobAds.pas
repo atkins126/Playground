@@ -55,7 +55,7 @@ type
   protected
     procedure DoAdDismissedFullScreenContent; virtual;
     procedure DoAdFailedToShowFullScreenContent(const AError: TAdError); virtual;
-    procedure DoAdShowedFullScreenContent; virtual;
+    procedure DoAdWillPresentFullScreenContent; virtual;
   public
     constructor Create(const AFullScreenAd: TFullScreenAd);
   end;
@@ -149,15 +149,15 @@ type
   private
     FOnAdDismissedFullScreenContent: TNotifyEvent;
     FOnAdFailedToShowFullScreenContent: TAdErrorEvent;
-    FOnAdShowedFullScreenContent: TNotifyEvent;
+    FOnAdWillPresentFullScreenContent: TNotifyEvent;
   protected
     procedure DoAdDismissedFullScreenContent;
     procedure DoAdFailedToShowFullScreenContent(const AError: TAdError);
-    procedure DoAdShowedFullScreenContent;
+    procedure DoAdWillPresentFullScreenContent;
   public
     property OnAdDismissedFullScreenContent: TNotifyEvent read FOnAdDismissedFullScreenContent write FOnAdDismissedFullScreenContent;
     property OnAdFailedToShowFullScreenContent: TAdErrorEvent read FOnAdFailedToShowFullScreenContent write FOnAdFailedToShowFullScreenContent;
-    property OnAdShowedFullScreenContent: TNotifyEvent read FOnAdShowedFullScreenContent write FOnAdShowedFullScreenContent;
+    property OnAdWillPresentFullScreenContent: TNotifyEvent read FOnAdWillPresentFullScreenContent write FOnAdWillPresentFullScreenContent;
   end;
 
   TInterstitialAd = class(TFullScreenAd)
@@ -217,8 +217,8 @@ type
 implementation
 
 uses
-  DW.OSLog,
   // DW
+  DW.OSLog,
 {$IF Defined(ANDROID)}
   DW.AdMobAds.Android,
 {$ENDIF}
@@ -232,9 +232,10 @@ uses
 
 {$IF not Defined(ANDROID) and not Defined(IOS)}
 type
+  TPlatformAppOpenAd = class(TCustomPlatformAppOpenAd);
   TPlatformInterstitialAd = class(TCustomPlatformInterstitialAd);
   TPlatformRewardedAd = class(TCustomPlatformRewardedAd);
-  TPlatformAppOpenAd = class(TCustomPlatformAppOpenAd);
+  TPlatformRewardedInterstitialAd = class(TCustomPlatformRewardedInterstitialAd);
 {$ENDIF}
 
 { TCustomPlatformBaseAd }
@@ -318,9 +319,9 @@ begin
   FFullScreenAd.DoAdFailedToShowFullScreenContent(AError);
 end;
 
-procedure TCustomPlatformFullScreenAd.DoAdShowedFullScreenContent;
+procedure TCustomPlatformFullScreenAd.DoAdWillPresentFullScreenContent;
 begin
-  FFullScreenAd.DoAdShowedFullScreenContent;
+  FFullScreenAd.DoAdWillPresentFullScreenContent;
 end;
 
 { TCustomPlatformInterstitialAd }
@@ -349,7 +350,6 @@ end;
 
 procedure TCustomPlatformBaseRewardedAd.DoUserEarnedReward(const AReward: TAdReward);
 begin
-  TOSLog.d('TCustomPlatformBaseRewardedAd.DoUserEarnedReward');
   FBaseRewardedAd.DoUserEarnedReward(AReward);
 end;
 
@@ -405,6 +405,7 @@ end;
 
 procedure TBaseAd.DoAdFailedToLoad(const AError: TAdError);
 begin
+  TOSLog.d('DoAdFailedToLoad (%s) - %d: %s', [ClassName, AError.ErrorCode, AError.Message]);
   if Assigned(FOnAdFailedToLoad) then
     FOnAdFailedToLoad(Self, AError);
 end;
@@ -451,14 +452,15 @@ end;
 
 procedure TFullScreenAd.DoAdFailedToShowFullScreenContent(const AError: TAdError);
 begin
+  TOSLog.d('DoAdFailedToShowFullScreenContent (%s) - %d: %s', [ClassName, AError.ErrorCode, AError.Message]);
   if Assigned(FOnAdFailedToShowFullScreenContent) then
     FOnAdFailedToShowFullScreenContent(Self, AError);
 end;
 
-procedure TFullScreenAd.DoAdShowedFullScreenContent;
+procedure TFullScreenAd.DoAdWillPresentFullScreenContent;
 begin
-  if Assigned(FOnAdShowedFullScreenContent) then
-    FOnAdShowedFullScreenContent(Self);
+  if Assigned(FOnAdWillPresentFullScreenContent) then
+    FOnAdWillPresentFullScreenContent(Self);
 end;
 
 { TInterstitialAd }

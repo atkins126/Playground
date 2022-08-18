@@ -1,0 +1,125 @@
+object Form1: TForm1
+  Left = 0
+  Top = 0
+  Caption = 'Form1'
+  ClientHeight = 678
+  ClientWidth = 490
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  DesignerMasterStyle = 0
+  object DetectedDevicesLabel: TLabel
+    Align = Top
+    Margins.Left = 6.000000000000000000
+    Margins.Top = 4.000000000000000000
+    Margins.Right = 6.000000000000000000
+    Position.X = 6.000000000000000000
+    Position.Y = 4.000000000000000000
+    Size.Width = 478.000000000000000000
+    Size.Height = 25.000000000000000000
+    Size.PlatformDefault = False
+    Text = 'Detected devices:'
+    TabOrder = 2
+  end
+  object DevicesListBox: TListBox
+    Align = Top
+    Margins.Left = 6.000000000000000000
+    Margins.Right = 6.000000000000000000
+    Position.X = 6.000000000000000000
+    Position.Y = 29.000000000000000000
+    Size.Width = 478.000000000000000000
+    Size.Height = 253.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 3
+    DisableFocusEffect = True
+    DefaultItemStyles.ItemStyle = ''
+    DefaultItemStyles.GroupHeaderStyle = ''
+    DefaultItemStyles.GroupFooterStyle = ''
+    OnItemClick = DevicesListBoxItemClick
+    Viewport.Width = 474.000000000000000000
+    Viewport.Height = 249.000000000000000000
+    object DevicesAniIndicator: TAniIndicator
+      Align = Contents
+      Size.Width = 474.000000000000000000
+      Size.Height = 249.000000000000000000
+      Size.PlatformDefault = False
+    end
+  end
+  object BottomLayout: TLayout
+    Align = Bottom
+    Padding.Left = 6.000000000000000000
+    Padding.Top = 6.000000000000000000
+    Padding.Right = 6.000000000000000000
+    Padding.Bottom = 6.000000000000000000
+    Position.Y = 624.000000000000000000
+    Size.Width = 490.000000000000000000
+    Size.Height = 54.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 4
+    object ScanButton: TButton
+      Align = Left
+      Position.X = 6.000000000000000000
+      Position.Y = 6.000000000000000000
+      Size.Width = 140.000000000000000000
+      Size.Height = 42.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = 'Scan'
+      OnClick = ScanButtonClick
+    end
+    object SwitchLayout: TLayout
+      Align = Right
+      Position.X = 404.000000000000000000
+      Position.Y = 6.000000000000000000
+      Size.Width = 80.000000000000000000
+      Size.Height = 42.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      object ActiveSwitch: TSwitch
+        Align = VertCenter
+        IsChecked = False
+        Position.Y = 7.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 27.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        OnSwitch = ActiveSwitchSwitch
+      end
+    end
+  end
+  object DeviceServicesLabel: TLabel
+    Align = Top
+    Margins.Left = 6.000000000000000000
+    Margins.Top = 4.000000000000000000
+    Margins.Right = 6.000000000000000000
+    Position.X = 6.000000000000000000
+    Position.Y = 286.000000000000000000
+    Size.Width = 478.000000000000000000
+    Size.Height = 25.000000000000000000
+    Size.PlatformDefault = False
+    Text = 'Device services:'
+    TabOrder = 0
+  end
+  object ServicesListBox: TListBox
+    Align = Client
+    Margins.Left = 6.000000000000000000
+    Margins.Right = 6.000000000000000000
+    Size.Width = 478.000000000000000000
+    Size.Height = 313.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    DisableFocusEffect = True
+    DefaultItemStyles.ItemStyle = ''
+    DefaultItemStyles.GroupHeaderStyle = ''
+    DefaultItemStyles.GroupFooterStyle = ''
+    OnItemClick = DevicesListBoxItemClick
+    Viewport.Width = 474.000000000000000000
+    Viewport.Height = 309.000000000000000000
+    object ServicesAniIndicator: TAniIndicator
+      Align = Contents
+      Size.Width = 474.000000000000000000
+      Size.Height = 309.000000000000000000
+      Size.PlatformDefault = False
+    end
+  end
+end
