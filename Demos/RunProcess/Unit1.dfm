@@ -1,0 +1,44 @@
+object Form1: TForm1
+  Left = 0
+  Top = 0
+  Caption = 'Form1'
+  ClientHeight = 460
+  ClientWidth = 741
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  TextHeight = 13
+  object Button1: TButton
+    AlignWithMargins = True
+    Left = 3
+    Top = 3
+    Width = 735
+    Height = 38
+    Align = alTop
+    Caption = 'Button1'
+    TabOrder = 0
+    OnClick = Button1Click
+    ExplicitWidth = 729
+  end
+  object Memo1: TMemo
+    AlignWithMargins = True
+    Left = 3
+    Top = 47
+    Width = 735
+    Height = 410
+    Align = alClient
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Consolas'
+    Font.Style = []
+    ParentFont = False
+    ScrollBars = ssVertical
+    TabOrder = 1
+    ExplicitWidth = 733
+    ExplicitHeight = 402
+  end
+end

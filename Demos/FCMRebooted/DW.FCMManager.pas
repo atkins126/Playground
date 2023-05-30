@@ -35,22 +35,23 @@ var
 implementation
 
 uses
-  System.SysUtils, System.Notification, System.Messaging, System.IOUtils,
+  System.SysUtils, System.Notification, System.Messaging, System.IOUtils, System.Permissions,
   {$IF Defined(ANDROID)}
   Androidapi.JNI.Os, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.JavaTypes, Androidapi.Helpers, Androidapi.JNI.Firebase,
   Androidapi.JNI.App, Androidapi.JNIBridge,
   FMX.PushNotification.Android,
+  DW.PushServiceNotification.Android, DW.Android.Helpers,
   {$ENDIF}
   {$IF Defined(IOS)}
   Macapi.Helpers, iOSapi.FirebaseMessaging, iOSapi.UserNotifications,
   FMX.PushNotification.FCM.iOS,
   {$ENDIF}
   FMX.Platform,
-  DW.OSLog,
   {$IF Defined(IOS)}
   DW.UserDefaults.iOS,
   {$ENDIF}
-  DW.OSMetadata;
+  DW.OSLog,
+  DW.OSMetadata, DW.Consts.Android, DW.Permissions.Helpers;
 
 type
   {$IF Defined(ANDROID)}
@@ -64,6 +65,35 @@ type
     ['{6977BA6C-67AA-4AD5-A0DB-1E7EE441771E}']
   end;
   TJDWNotificationPresenter = class(TJavaGenericImport<JDWNotificationPresenterClass, JDWNotificationPresenter>) end;
+
+  [JavaSignature('com/delphiworlds/kastri/DWFirebaseMessagingServiceCallback')]
+  JDWFirebaseMessagingServiceCallback = interface(IJavaInstance)
+    ['{F2EA3740-307A-43E0-B85B-A9582E15D967}']
+    procedure onNotificationReceived(intent: JIntent); cdecl;
+  end;
+
+  JDWFirebaseMessagingServiceClass = interface(JObjectClass)
+    ['{B4946E5D-2BA4-4165-B2DC-65948EB41B7D}']
+    {class} procedure setCallback(callback: JDWFirebaseMessagingServiceCallback); cdecl;
+  end;
+
+  [JavaSignature('com/delphiworlds/kastri/DWFirebaseMessagingService')]
+  JDWFirebaseMessagingService = interface(JObject)
+    ['{3218915F-8C29-41DC-AA4B-D80D723BD6F4}']
+  end;
+  TJDWFirebaseMessagingService = class(TJavaGenericImport<JDWFirebaseMessagingServiceClass, JDWFirebaseMessagingService>) end;
+
+  TFCMManager = class;
+
+  TDWFirebaseMessagingServiceCallback = class(TJavaLocal, JDWFirebaseMessagingServiceCallback)
+  private
+    FFCMManager: TFCMManager;
+  public
+    { JDWFirebaseMessagingServiceCallback }
+    procedure onNotificationReceived(intent: JIntent); cdecl;
+  public
+    constructor Create(const AFCMManager: TFCMManager);
+  end;
   {$ENDIF}
 
   TFCMManager = class(TInterfacedObject, IFCMManager)
@@ -74,6 +104,9 @@ type
     {$ENDIF}
     FDeviceID: string;
     FDeviceToken: string;
+    {$IF Defined(ANDROID)}
+    FFirebaseMessagingServiceCallback: TDWFirebaseMessagingServiceCallback;
+    {$ENDIF}
     FIsForeground: Boolean;
     FServiceConnection: TPushServiceConnection;
     FShowBannerIfForeground: Boolean;
@@ -87,6 +120,7 @@ type
     procedure CheckStartupNotifications;
     procedure CreateChannel;
     procedure CreateConnection;
+    procedure DoStart;
     function GetPushService: TPushService;
     {$IF Defined(ANDROID)}
     function IsAndroidPushEnabled: Boolean;
@@ -95,6 +129,8 @@ type
     procedure PushDeviceTokenMessageHandler(const Sender: TObject; const AMsg: TMessage);
     procedure ReceiveNotificationHandler(Sender: TObject; const AServiceNotification: TPushServiceNotification);
     procedure ServiceConnectionChangeHandler(Sender: TObject; APushChanges: TPushService.TChanges);
+  protected
+    procedure HandleNotification(const AServiceNotification: TPushServiceNotification);
   public
     { IFCMManager }
     procedure CheckPushEnabled(const AHandler: TCheckPushEnabledMethod);
@@ -122,6 +158,33 @@ const
 
   UNAuthorizationStatusEphemeral = 4;
 
+{$IF Defined(ANDROID)}
+{ TDWFirebaseMessagingServiceCallback }
+
+constructor TDWFirebaseMessagingServiceCallback.Create(const AFCMManager: TFCMManager);
+begin
+  inherited Create;
+  FFCMManager := AFCMManager;
+end;
+
+procedure TDWFirebaseMessagingServiceCallback.onNotificationReceived(intent: JIntent);
+var
+  LExtras: JBundle;
+  LNotification: TPushServiceNotification;
+begin
+  LExtras := intent.getExtras;
+  if LExtras <> nil then
+  begin
+    LNotification := TAndroidPushServiceNotification.Create(LExtras);
+    try
+      FFCMManager.HandleNotification(LNotification);
+    finally
+      LNotification.Free;
+    end;
+  end;
+end;
+{$ENDIF}
+
 { TFCMManager }
 
 constructor TFCMManager.Create;
@@ -132,6 +195,10 @@ begin
   TMessageManager.DefaultManager.SubscribeToMessage(TApplicationEventMessage, ApplicationEventMessageHandler);
   TMessageManager.DefaultManager.SubscribeToMessage(TPushDeviceTokenMessage, PushDeviceTokenMessageHandler);
   TMessageManager.DefaultManager.SubscribeToMessage(TMessageReceivedNotification, MessageReceivedNotificationHandler);
+  {$IF Defined(ANDROID)}
+  FFirebaseMessagingServiceCallback := TDWFirebaseMessagingServiceCallback.Create(Self);
+  TJDWFirebaseMessagingService.JavaClass.setCallback(FFirebaseMessagingServiceCallback);
+  {$ENDIF}
 end;
 
 destructor TFCMManager.Destroy;
@@ -313,8 +380,8 @@ var
 begin
   if FShowBannerIfForeground and FIsForeground then
   begin
-    TOSMetadata.GetValue(cMetadataFCMDefaultNotificationIcon, LIcon);
     LIntent := TMessageReceivedNotification(AMsg).Value;
+    TOSMetadata.GetValue(cMetadataFCMDefaultNotificationIcon, LIcon);
     TJDWNotificationPresenter.JavaClass.presentNotification(TAndroidHelper.Context, LIntent, StringToJString(FChannelId), StrToIntDef(LIcon, 0));
   end;
 end;
@@ -333,13 +400,20 @@ begin
   {$ENDIF}
 end;
 
+procedure TFCMManager.HandleNotification(const AServiceNotification: TPushServiceNotification);
+begin
+  if TThread.CurrentThread.ThreadID <> MainThreadID then
+    TThread.Synchronize(nil, procedure begin ReceiveNotificationHandler(Self, AServiceNotification) end)
+  else
+    ReceiveNotificationHandler(Self, AServiceNotification);
+end;
+
 procedure TFCMManager.ReceiveNotificationHandler(Sender: TObject; const AServiceNotification: TPushServiceNotification);
 begin
   if Assigned(FOnNotificationReceived) then
     FOnNotificationReceived(Self, AServiceNotification);
   if AServiceNotification.Json <> nil then
   begin
-    TOSLog.d('TFCMManager.ReceiveNotificationHandler - JSON: %s', [AServiceNotification.Json.ToString]);
     if Assigned(FOnMessageReceived) then
       FOnMessageReceived(Self, AServiceNotification.Json);
   end;
@@ -348,20 +422,36 @@ end;
 procedure TFCMManager.ServiceConnectionChangeHandler(Sender: TObject; APushChanges: TPushService.TChanges);
 begin
   if TPushService.TChange.DeviceToken in APushChanges then
-  begin
-    TOSLog.d('TFCMManager.ServiceConnectionChangeHandler');
     FDeviceToken := GetPushService.DeviceTokenValue[TPushService.TDeviceTokenNames.DeviceToken];
-    TOSLog.d('> Token: %s', [FDeviceToken]);
-  end;
   if (TPushService.TChange.Status in APushChanges) and Assigned(FOnStatusChange) then
     FOnStatusChange(Self);
 end;
 
-procedure TFCMManager.Start;
+procedure TFCMManager.DoStart;
 begin
   CreateChannel;
   CreateConnection;
   CheckStartupNotifications;
+end;
+
+procedure TFCMManager.Start;
+begin
+  {$IF Defined(ANDROID)}
+  if TAndroidHelperEx.CheckBuildAndTarget(33) then
+  begin
+    PermissionsService.RequestPermissions([cPermissionPostNotifications],
+      procedure(const APermissions: TPermissionArray; const AGrantResults: TPermissionStatusArray)
+      begin
+        if AGrantResults.AreAllGranted then
+          DoStart;
+      end
+    );
+  end
+  else
+    DoStart;
+  {$ELSE}
+  DoStart;
+  {$ENDIF}
 end;
 
 procedure TFCMManager.SubscribeToTopic(const ATopic: string);

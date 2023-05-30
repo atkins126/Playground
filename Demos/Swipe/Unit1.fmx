@@ -1,0 +1,105 @@
+object Form1: TForm1
+  Left = 0
+  Top = 0
+  Caption = 'Form1'
+  ClientHeight = 918
+  ClientWidth = 622
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  DesignerMasterStyle = 0
+  object Image1: TImage
+    MultiResBitmap.Height = 612
+    MultiResBitmap.Width = 407
+    MultiResBitmap = <
+      item
+      end>
+    HitTest = False
+    Position.X = 32.000000000000000000
+    Position.Y = 72.000000000000000000
+    Size.Width = 301.000000000000000000
+    Size.Height = 513.000000000000000000
+    Size.PlatformDefault = False
+    object Label1: TLabel
+      Align = Top
+      StyledSettings = [Family, Style]
+      Size.Width = 301.000000000000000000
+      Size.Height = 32.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.Font.Size = 32.000000000000000000
+      TextSettings.FontColor = claWhite
+      TextSettings.HorzAlign = Center
+      Text = '1'
+      Visible = False
+      TabOrder = 0
+    end
+  end
+  object Image2: TImage
+    MultiResBitmap.Height = 800
+    MultiResBitmap.Width = 500
+    MultiResBitmap = <
+      item
+      end>
+    HitTest = False
+    Position.X = 96.000000000000000000
+    Position.Y = 124.000000000000000000
+    Size.Width = 301.000000000000000000
+    Size.Height = 513.000000000000000000
+    Size.PlatformDefault = False
+    object Label2: TLabel
+      Align = Top
+      StyledSettings = [Family, Style]
+      Size.Width = 301.000000000000000000
+      Size.Height = 32.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.Font.Size = 32.000000000000000000
+      TextSettings.FontColor = claWhite
+      TextSettings.HorzAlign = Center
+      Text = '2'
+      Visible = False
+      TabOrder = 0
+    end
+  end
+  object Image3: TImage
+    MultiResBitmap.Height = 1500
+    MultiResBitmap.Width = 1000
+    MultiResBitmap = <
+      item
+      end>
+    HitTest = False
+    Position.X = 176.000000000000000000
+    Position.Y = 192.000000000000000000
+    Size.Width = 301.000000000000000000
+    Size.Height = 513.000000000000000000
+    Size.PlatformDefault = False
+    object Label3: TLabel
+      Align = Top
+      StyledSettings = [Family, Style]
+      Size.Width = 301.000000000000000000
+      Size.Height = 32.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.Font.Size = 32.000000000000000000
+      TextSettings.FontColor = claWhite
+      TextSettings.HorzAlign = Center
+      Text = '3'
+      Visible = False
+      TabOrder = 0
+    end
+  end
+  inline SwipeView1: TSwipeView
+    Align = Client
+    Size.Width = 622.000000000000000000
+    Size.Height = 918.000000000000000000
+    Size.PlatformDefault = False
+    inherited MainLayout: TLayout
+      Size.Width = 621.000000000000000000
+      Size.Height = 917.000000000000000000
+    end
+  end
+  object SlideTimer: TTimer
+    Interval = 4000
+    OnTimer = SlideTimerTimer
+    Left = 552
+    Top = 557
+  end
+end
